@@ -67,7 +67,25 @@ int verifyInput(contacts *c) {
 }
 
 bool matchNumber(char *q, Contact *cc, bool *spaces) {
-
+    if (strlen(q) < strlen(cc->tel)) {
+        if (spaces) {
+            unsigned long qIndex = 0;
+            //unsigned long ccIndex = 0;
+            for (unsigned long ccIndex = 0; ccIndex < strlen(cc->tel); ++ccIndex) {
+                if (cc->tel[ccIndex] == q[qIndex]) {
+                    qIndex++;
+                }
+            }
+            if (qIndex == strlen(q)) {
+                return true;
+            }
+        }
+        else if (strstr(cc->tel, q) != NULL){
+            return true;
+        }
+        else return false;
+    }
+    else return false;
 }
 
 void printContact(Contact *cc) {
@@ -82,6 +100,10 @@ void printAll(contacts *c) {
     }
 }
 
+void notFound() {
+    printf("%s", "Not found");
+}
+
 int main(int argc, char *argv[]) {
     log("zacinam");
     contacts *pc;
@@ -89,9 +111,20 @@ int main(int argc, char *argv[]) {
     pc = &c;
 
     loadInput(pc);
+    bool spaces = false;
+    bool *sp = &spaces;
+    char *query = argv[1];
     if (verifyInput(pc) == 0) {
         if (argc > 1) {
-            char *query = argv[1];
+            if (strcmp(argv[1],"-s") == 0) {
+                 query = argv[2];
+                 spaces = true;
+            }
+            for (int itemNumber = 0; itemNumber < ITEM_COUNT; ++itemNumber) {
+                if (matchNumber(query, &pc->item[itemNumber], sp)) {
+                    printContact(&pc->item[itemNumber]);
+                }
+            }
 
         }
         else printAll(pc);
