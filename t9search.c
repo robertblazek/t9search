@@ -67,12 +67,23 @@ int verifyInput(contacts *c) {
 }
 
 bool matchNumber(char *q, Contact *cc, bool *spaces) {
-    if (strlen(q) < strlen(cc->tel)) {
-        if (spaces) {
+    size_t ccLength = strlen(cc->tel);
+
+    char numbers[ITEM_LENGTH] = {};
+
+    for (size_t telIndex = 0; telIndex < ccLength; ++telIndex) {
+        if (cc->tel[telIndex] == '+') {
+            numbers[telIndex] = '0';
+        }
+        else numbers[telIndex] = cc->tel[telIndex];
+    }
+
+    if (strlen(q) < ccLength) {
+        if (*spaces == true) {
             unsigned long qIndex = 0;
             //unsigned long ccIndex = 0;
-            for (unsigned long ccIndex = 0; ccIndex < strlen(cc->tel); ++ccIndex) {
-                if (cc->tel[ccIndex] == q[qIndex]) {
+            for (unsigned long ccIndex = 0; ccIndex < ccLength; ++ccIndex) {
+                if (numbers[ccIndex] == q[qIndex]) {
                     qIndex++;
                 }
             }
@@ -80,12 +91,67 @@ bool matchNumber(char *q, Contact *cc, bool *spaces) {
                 return true;
             }
         }
-        else if (strstr(cc->tel, q) != NULL){
+        else if (strstr(numbers, q) != NULL){
             return true;
         }
         else return false;
     }
-    else return false;
+    return false;
+}
+
+bool matchName(char *q, Contact *cc, bool *spaces) {
+    const char *map[10];
+    map[0] = "+";
+    map[1] = "";
+    map[2] = "aAbBcC";
+    map[3] = "dDeEfF";
+    map[4] = "gGhHiI";
+    map[5] = "jJkKlL";
+    map[6] = "mMnNoO";
+    map[7] = "pPqQrRsS";
+    map[8] = "tTuUvV";
+    map[9] = "wWxXyYzZ";
+    
+    char numbers[ITEM_LENGTH] = {};
+
+    size_t nameLength = strlen(cc->name);
+
+    for (size_t nameIndex = 0; nameIndex < nameLength; nameIndex++) {
+        for (int mapIndex = 0; mapIndex < 10; ++mapIndex) {
+            if ( mapIndex != 1 ) {
+                if (strchr(map[mapIndex], cc->name[nameIndex]) != NULL) {
+                    numbers[nameIndex] = mapIndex + '0';
+                }
+
+            }
+        }
+        if (cc->name[nameIndex] == 32) {
+            numbers[nameIndex] = '#';
+        }
+    }
+
+
+
+    if (strlen(q) < nameLength) {
+        if (*spaces == true) {
+            unsigned long qIndex = 0;
+            //unsigned long ccIndex = 0;
+            for (unsigned long nameIndex = 0; nameIndex < nameLength; ++nameIndex) {
+                if (numbers[nameIndex] == q[qIndex] && numbers[nameIndex] != 0) {
+                    qIndex++;
+                }
+            }
+            if (qIndex == strlen(q)) {
+                return true;
+            }
+        }
+        else if (strstr(numbers, q) != NULL){
+            return true;
+        }
+        else return false;
+    }
+    return false;
+
 }
 
 void printContact(Contact *cc) {
@@ -101,11 +167,50 @@ void printAll(contacts *c) {
 }
 
 void notFound() {
-    printf("%s", "Not found");
+    printf("%s", "Not found\n");
+}
+
+int verifyArgs(int *argc, char *argv[]) {
+    int returnValue = 0;
+    if (*argc <= 3) {
+        if (*argc == 2) {
+            for (unsigned long i = 0; i < strlen(argv[1]); ++i) {
+                if (argv[1][i] < '0' || argv[1][i] > '9') {
+                    fprintf(stderr, "error: Argument contains non-digit characters");
+                    returnValue = 1;
+                }
+            }
+        } else if (*argc == 3) {
+            if (strcmp(argv[1], "-s") == 0) {
+                for (unsigned long i = 0; i < strlen(argv[2]); ++i) {
+                    if (argv[2][i] < '0' || argv[2][i] > '9') {
+                        fprintf(stderr, "error: Argument contains non-digit characters");
+                        returnValue = 1;
+                    }
+                }
+            }
+            else {
+                fprintf(stderr, "error: First argument should be '-s'");
+                returnValue = 1;
+            }
+        }
+        else returnValue = 0;
+    } else {
+        fprintf(stderr, "error: Too many arguments");
+        returnValue = 1;
+    }
+
+    return returnValue;
 }
 
 int main(int argc, char *argv[]) {
     log("zacinam");
+
+    int argVerify = verifyArgs(&argc, argv);
+    if (argVerify != 0) {
+        return argVerify;
+    }
+
     contacts *pc;
     contacts c;
     pc = &c;
@@ -114,6 +219,9 @@ int main(int argc, char *argv[]) {
     bool spaces = false;
     bool *sp = &spaces;
     char *query = argv[1];
+
+    int foundCount = 0;
+
     if (verifyInput(pc) == 0) {
         if (argc > 1) {
             if (strcmp(argv[1],"-s") == 0) {
@@ -121,11 +229,12 @@ int main(int argc, char *argv[]) {
                  spaces = true;
             }
             for (int itemNumber = 0; itemNumber < ITEM_COUNT; ++itemNumber) {
-                if (matchNumber(query, &pc->item[itemNumber], sp)) {
+                if (matchNumber(query, &pc->item[itemNumber], sp) || matchName(query, &pc->item[itemNumber], sp)) {
                     printContact(&pc->item[itemNumber]);
+                    foundCount++;
                 }
             }
-
+            if (foundCount == 0) notFound();
         }
         else printAll(pc);
     }
