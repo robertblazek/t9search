@@ -48,7 +48,7 @@ build cmake_object_order_depends_target_t9search: phony || CMakeFiles/t9search.d
 
 build CMakeFiles/t9search.dir/t9search.c.o: C_COMPILER__t9search_Debug /Users/robert/Documents/škola/IZP/CLion/t9search/t9search.c || cmake_object_order_depends_target_t9search
   DEP_FILE = CMakeFiles/t9search.dir/t9search.c.o.d
-  FLAGS = -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk -Wall -Wextra -DDEBUG -std=gnu99
+  FLAGS = -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX12.3.sdk -Wall -Wextra -Werror -std=gnu99
   OBJECT_DIR = CMakeFiles/t9search.dir
   OBJECT_FILE_DIR = CMakeFiles/t9search.dir
 
